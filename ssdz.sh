@@ -6,6 +6,8 @@
 #  Tool to zap multiple sequential disks (clear MBR & GPT)
 #  Useful for preparing a large amount of disks for zfs use.
 
+force=false
+
 # Function to display information
 information() {
   echo "ssdz - Tool to zap multiple sequential disks (clear MBR & GPT)"
@@ -33,6 +35,10 @@ handle_args() {
         echo "Starting drive: $startingDrive"
         shift
         ;;
+      -f | --force)
+        force=true
+        shift
+        ;;
       *)
         echo "default"
         information
@@ -45,3 +51,4 @@ done
 
 # Main
 handle_args "$@"
+echo "Force is: $force"
