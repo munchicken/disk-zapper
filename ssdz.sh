@@ -7,6 +7,10 @@
 #  Useful for preparing a large amount of disks for zfs use.
 
 force=false
+template="/dev/sd"
+declare -a alphabet=(“a” “b” “c” “d” “e” “f” “g” “h” “i” “j” “k” “l” “m” “n” “o” “p” “q” “r” “s” “t” “u” “v” “w” “x” “y” “z”)
+declare -a drives=()
+
 
 # Function to display information
 information() {
@@ -102,8 +106,16 @@ check_req_args() {
     fi
 }
 
+# Function to get the starting letter
+get_starting_letter() {
+    # remove template from startingDrive to get letter
+    startingLetter="${startingDrive#$template}"
+    echo "Starting letter is: $startingLetter"
+}
+
 # Main
 is_installed
 handle_args "$@"
 check_req_args
 echo "Force is: $force"
+get_starting_letter
