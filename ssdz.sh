@@ -14,6 +14,7 @@ information() {
   echo "-h, --help    Display this message"
   echo "-n, --number  Number of drives to process"
   echo "-d, --drive   Starting drive"
+  echo "-f, --force   Skip confirmation"
 }
 
 # Function to handle arguments
