@@ -11,6 +11,7 @@ force=false
 # Function to display information
 information() {
   echo "ssdz - Tool to zap multiple sequential disks (clear MBR & GPT)"
+  echo "Requirements:  sgdisk"
   echo "-h, --help    Display this message"
   echo "-n, --number  Number of drives to process"
   echo "-d, --drive   Starting drive"
@@ -50,6 +51,18 @@ handle_args() {
 done
 }
 
+# Function to verify sgdisk is installed
+isInstalled() {
+    if command -v sgdisk > /dev/null 2>&1; then
+      echo "sgdisk is installed"
+    else
+      echo "sgdisk is not installed" >&2
+      information
+      exit 1
+    fi
+}
+
 # Main
+isInstalled
 handle_args "$@"
 echo "Force is: $force"
