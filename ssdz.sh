@@ -9,8 +9,9 @@
 # Function to display information
 information() {
   echo "ssdz - Tool to zap multiple sequential disks (clear MBR & GPT)"
-  echo "-h, --help    Display this message
-  echo "-n, --number  Number of drives to process
+  echo "-h, --help    Display this message"
+  echo "-n, --number  Number of drives to process"
+  echo "-d, --drive   Starting drive"
 }
 
 # Function to handle arguments
@@ -18,8 +19,8 @@ handle_args() {
   while [ $# -gt 0 ]; do
     case $1 in
       -h | --help)
-        #information
         echo "help"
+        information
         exit 0
         ;;
       -n | --number)
@@ -27,9 +28,14 @@ handle_args() {
         echo "Number of drives: $numOfDrives"
         shift
         ;;
+      -d | --drive)
+        startingDrive="$2"
+        echo "Starting drive: $startingDrive"
+        shift
+        ;;
       *)
         echo "default"
-        #information
+        information
         exit 0
         ;;
     esac
