@@ -8,7 +8,7 @@
 
 force=false
 template="/dev/sd"
-declare -a alphabet=(“a” “b” “c” “d” “e” “f” “g” “h” “i” “j” “k” “l” “m” “n” “o” “p” “q” “r” “s” “t” “u” “v” “w” “x” “y” “z”)
+declare -a alphabet=(a b c d e f g h i j k l m n o p q r s t u v w x y z)
 declare -a drives=()
 
 
@@ -113,9 +113,43 @@ get_starting_letter() {
     echo "Starting letter is: $startingLetter"
 }
 
+# Function to find index of starting letter
+index_of_starting_letter() {
+    for ((j=0; j<${#alphabet[@]}; j++)); do
+      if [[ ${alphabet[$j]} == $startingLetter ]]; then
+        echo "$j"  #return j
+      fi
+    done
+}
+
+# Fuction to create array of drives
+create_drives() {
+    echo "Index of starting letter is: $(index_of_starting_letter)"
+    i=$(index_of_starting_letter)
+    currentDrive=$startingDrive
+    echo "Current drive is: $currentDrive"
+
+    while [ $numOfDrives -gt 0 ]; do
+      drives+=($currentDrive)
+      ((i++))
+      currentDrive=$template${alphabet[$i]}
+      ((numOfDrives--))
+    done
+    
+    echo ${drives[*]}
+}
+
+# Function to show drive list to user
+show_drives() {
+    echo "You have selected to zap the following drives:"
+    echo ${drives[*]}
+}
+
 # Main
 is_installed
 handle_args "$@"
 check_req_args
 echo "Force is: $force"
 get_starting_letter
+create_drives
+show_drives
