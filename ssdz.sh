@@ -52,9 +52,15 @@ handle_args() {
         fi
         ;;
       -d | --drive)
-        startingDrive="$2"
-        echo "Starting drive: $startingDrive"
-        shift
+        # test if in format /dev/sdx
+        if [[ $2 =~ /dev/sd[a-z]{1}$ ]]; then
+          startingDrive="$2"
+          echo "Starting drive: $startingDrive"
+          shift
+        else
+          echo "Starting drive must be in format /dev/sdx" >&2
+          exit 1
+        fi
         ;;
       -f | --force)
         force=true
