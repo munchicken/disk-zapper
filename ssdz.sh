@@ -28,9 +28,27 @@ handle_args() {
         exit 0
         ;;
       -n | --number)
-        numOfDrives="$2"
-        echo "Number of drives: $numOfDrives"
-        shift
+        # test for argument
+        if [[ -n "$2" ]]; then
+          # test if argument is a number
+          if [[ $2 =~ ^-?[0-9]+$ ]]; then
+            # test if argument is nonzero & positive
+            if [ $2 -lt 1 ]; then
+              echo "Number of drives must be greater than zero." >&2
+              exit 1
+            else
+              numOfDrives="$2"
+              echo "Number of drives: $numOfDrives"
+              shift
+            fi
+          else
+            echo "$2 is not a number. Number of drives must be a number." >&2
+            exit 1
+          fi
+        else
+          echo "Error:  Number of drives must be specified" >&2
+          exit 1
+        fi
         ;;
       -d | --drive)
         startingDrive="$2"
