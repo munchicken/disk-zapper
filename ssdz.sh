@@ -161,7 +161,7 @@ handle_confirmation() {
       echo "You responded: $confirmation"
       if [[ $confirmation != y ]]; then
         echo "Exiting..."
-        exit 1
+        exit 0
       fi
     fi
     zap_drives
@@ -170,6 +170,11 @@ handle_confirmation() {
 # Function to zap drives with sgdisk
 zap_drives() {
     echo "Zapping drives!"
+
+    for drive in "${drives[@]}"; do
+      echo "sgdisk -Z $drive"
+    done
+    echo "All drives zapped"
 }
 
 # Main
