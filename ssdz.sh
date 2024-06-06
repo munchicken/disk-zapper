@@ -11,16 +11,24 @@ template="/dev/sd"
 declare -a alphabet=(a b c d e f g h i j k l m n o p q r s t u v w x y z)
 declare -a drives=()
 
+# Function to display title
+show_title() {
+    echo "ssdz - Tool to zap multiple sequential disks (clear MBR & GPT)"
+}
 
 # Function to display information
 information() {
-  echo "ssdz - Tool to zap multiple sequential disks (clear MBR & GPT)"
+  show_title
   echo "Requirements:  sgdisk"
   echo "Arguments:"
   echo "-h, --help    Display this message"
   echo "-n, --number  Number of drives to process (required)"
   echo "-d, --drive   Starting drive (required)"
   echo "-f, --force   Skip confirmation"
+  echo "Examples:"
+  echo "ssdz -h"
+  echo "ssdz -n 12 -d /dev/sdc"
+  echo "ssdz -n 5 -d /dev/sde -f"
 }
 
 # Function to handle arguments
@@ -124,6 +132,7 @@ index_of_starting_letter() {
 
 # Fuction to create array of drives
 create_drives() {
+    get_starting_letter
     echo "Index of starting letter is: $(index_of_starting_letter)"
     i=$(index_of_starting_letter)
     currentDrive=$startingDrive
@@ -135,8 +144,6 @@ create_drives() {
       currentDrive=$template${alphabet[$i]}
       ((numOfDrives--))
     done
-    
-    echo ${drives[*]}
 }
 
 # Function to show drive list to user
@@ -145,11 +152,30 @@ show_drives() {
     echo ${drives[*]}
 }
 
+# Function to handle confirmation to zap drives
+handle_confirmation() {
+    echo "Force is: $force"
+    if [ "$force" = false ]; then
+      show_drives
+      read -p "Do you want to continue? y/n " confirmation
+      echo "You responded: $confirmation"
+      if [[ $confirmation != y ]]; then
+        echo "Exiting..."
+        exit 1
+      fi
+    fi
+    zap_drives
+}
+
+# Function to zap drives with sgdisk
+zap_drives() {
+    echo "Zapping drives!"
+}
+
 # Main
-is_installed
 handle_args "$@"
+is_installed
+show_title
 check_req_args
-echo "Force is: $force"
-get_starting_letter
 create_drives
-show_drives
+handle_confirmation
