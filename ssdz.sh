@@ -173,6 +173,13 @@ zap_drives() {
 
     for drive in "${drives[@]}"; do
       echo "sgdisk -Z $drive"
+      returnCode=$?
+      #returnCode=1
+      echo "Exit code: $returnCode"
+      if [ $returnCode -gt 0 ]; then
+        echo "sgdisk failed"
+        exit 1
+      fi
     done
     echo "All drives zapped"
 }
