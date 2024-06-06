@@ -21,14 +21,18 @@ information() {
   show_title
   echo "Requirements:  sgdisk"
   echo "Arguments:"
-  echo "-h, --help    Display this message"
-  echo "-n, --number  Number of drives to process (required)"
-  echo "-d, --drive   Starting drive (required)"
-  echo "-f, --force   Skip confirmation"
+  echo "  -h, --help    Display this message"
+  echo "  -n, --number  Number of drives to process (required)"
+  echo "  -d, --drive   Starting drive (required)"
+  echo "  -f, --force   Skip confirmation"
+  echo "Limitations:"
+  echo "  Must start on one of first 26 disks /dev/sda - /dev/sdz"
+  echo "  Usable up to /dev/sdaz"
+  echo "  (will look at expanding this in future versions)"
   echo "Examples:"
-  echo "ssdz -h"
-  echo "ssdz -n 12 -d /dev/sdc"
-  echo "ssdz -n 5 -d /dev/sde -f"
+  echo "  ssdz -h"
+  echo "  ssdz -n 12 -d /dev/sdc"
+  echo "  ssdz -n 5 -d /dev/sde -f"
 }
 
 # Function to handle arguments
@@ -140,7 +144,21 @@ create_drives() {
 
     while [ $numOfDrives -gt 0 ]; do
       drives+=($currentDrive)
-      ((i++))
+      # check if we are at z
+      if [[ i -eq 25 ]]; then
+        # change template to add an a '/dev/sda', so next would be /sdaa, /sdab, etc
+        template+=${alphabet[0]}
+        # loop back around to a
+        i=0
+      else
+        ((i++))
+      fi
+      # 
+      if [ $currentDrive = /dev/sdaaa ]; then
+        echo "Exceeded limitation at: $currentDrive"
+        echo "Exceeded limitation, exiting.  (past /dev/sdaz)"
+        exit 1
+      fi
       currentDrive=$template${alphabet[$i]}
       ((numOfDrives--))
     done
@@ -173,6 +191,7 @@ zap_drives() {
 
     for drive in "${drives[@]}"; do
       echo "sgdisk -Z $drive"
+      #sgdisk -Z $drive
       returnCode=$?
       #returnCode=1
       echo "Exit code: $returnCode"
