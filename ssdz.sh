@@ -6,6 +6,7 @@
 #  Tool to zap multiple sequential disks (clear MBR & GPT)
 #  Useful for preparing a large amount of disks for zfs use.
 
+# Variables
 force=false
 template="/dev/sd"
 declare -a alphabet=(a b c d e f g h i j k l m n o p q r s t u v w x y z)
@@ -28,7 +29,6 @@ information() {
   echo "Limitations:"
   echo "  Must start on one of first 26 disks /dev/sda - /dev/sdz"
   echo "  Usable up to /dev/sdaz"
-  echo "  (will look at expanding this in future versions)"
   echo "Examples:"
   echo "  ssdz -h"
   echo "  ssdz -n 12 -d /dev/sdc"
@@ -37,10 +37,15 @@ information() {
 
 # Function to handle arguments
 handle_args() {
+  if [[ $# -eq 0 ]]; then
+    information
+    exit 0
+  fi    
+
   while [ $# -gt 0 ]; do
     case $1 in
       -h | --help)
-        echo "help"
+        #echo "help"  #DEBUG
         information
         exit 0
         ;;
@@ -51,30 +56,39 @@ handle_args() {
           if [[ $2 =~ ^-?[0-9]+$ ]]; then
             # test if argument is nonzero & positive
             if [ $2 -lt 1 ]; then
-              echo "Number of drives must be greater than zero." >&2
+              echo "Error:  Number of drives must be greater than zero." >&2
+              echo
+              information
               exit 1
             else
               numOfDrives="$2"
-              echo "Number of drives: $numOfDrives"
+              #echo "Number of drives: $numOfDrives"  #DEBUG
               shift
             fi
           else
-            echo "$2 is not a number. Number of drives must be a number." >&2
+            echo "Error:  $2 is not a number. Number of drives must be a number." >&2
+            echo
+            information
             exit 1
           fi
         else
           echo "Error:  Number of drives must be specified" >&2
+          echo
+          information
           exit 1
         fi
         ;;
       -d | --drive)
         # test if in format /dev/sdx
+        #   currently only supporting /dev/sdx, will try to accomodate /dev/sdxx in next ver
         if [[ $2 =~ /dev/sd[a-z]{1}$ ]]; then
           startingDrive="$2"
-          echo "Starting drive: $startingDrive"
+          #echo "Starting drive: $startingDrive"  #DEBUG
           shift
         else
-          echo "Starting drive must be in format /dev/sdx" >&2
+          echo "Error:  Starting drive must be in format /dev/sdx" >&2
+          echo
+          information
           exit 1
         fi
         ;;
@@ -83,7 +97,9 @@ handle_args() {
         shift
         ;;
       *)
-        echo "default"
+        #echo "default"  #DEBUG
+        echo "Error:  Invalid argument" >&2
+        echo
         information
         exit 0
         ;;
@@ -95,9 +111,11 @@ done
 # Function to verify sgdisk is installed
 is_installed() {
     if command -v sgdisk > /dev/null 2>&1; then
-      echo "sgdisk is installed"
+      #echo "sgdisk is installed"  #DEBUG
+      :  #no-op after debugging
     else
-      echo "sgdisk is not installed" >&2
+      echo "Error:  sgdisk is not installed" >&2
+      echo
       information
       exit 1
     fi
@@ -106,13 +124,15 @@ is_installed() {
 # Function to verify required arguments exist
 check_req_args() {
     if ! [[ -n "$numOfDrives" ]]; then
-      echo "Number of drives is required." >&2
+      echo "Error:  Number of drives is required." >&2
+      echo
       information
       exit 1
     fi
 
     if ! [[ -n "$startingDrive" ]]; then
-      echo "Starting drive is required." >&2
+      echo "Error:  Starting drive is required." >&2
+      echo
       information
       exit 1
     fi
@@ -122,7 +142,7 @@ check_req_args() {
 get_starting_letter() {
     # remove template from startingDrive to get letter
     startingLetter="${startingDrive#$template}"
-    echo "Starting letter is: $startingLetter"
+    #echo "Starting letter is: $startingLetter"  #DEBUG
 }
 
 # Function to find index of starting letter
@@ -137,28 +157,35 @@ index_of_starting_letter() {
 # Fuction to create array of drives
 create_drives() {
     get_starting_letter
-    echo "Index of starting letter is: $(index_of_starting_letter)"
+    #echo "Index of starting letter is: $(index_of_starting_letter)"  #DEBUG
     i=$(index_of_starting_letter)
     currentDrive=$startingDrive
-    echo "Current drive is: $currentDrive"
+    #echo "Current drive is: $currentDrive"  #DEBUG
 
     while [ $numOfDrives -gt 0 ]; do
       drives+=($currentDrive)
+
       # check if we are at z
       if [[ i -eq 25 ]]; then
-        # change template to add an a '/dev/sda', so next would be /sdaa, /sdab, etc
+        # change template to add an 'a' '/dev/sda', so next would be /sdaa, /sdab, etc
         template+=${alphabet[0]}
         # loop back around to a
         i=0
       else
         ((i++))
       fi
-      # 
+
+      # check if we went past /sdaz
+      #   currently program adds another 'a' instead of restarting with b (/sdaaa not /sdba)
+      #   will try to accomodate another set of 26 drives in next version
       if [ $currentDrive = /dev/sdaaa ]; then
-        echo "Exceeded limitation at: $currentDrive"
-        echo "Exceeded limitation, exiting.  (past /dev/sdaz)"
+        #echo "Exceeded limitation at: $currentDrive"  #DEBUG
+        echo "Error:  Exceeded limitation, exiting.  (past /dev/sdaz)" >&2
+        echo
+        information
         exit 1
       fi
+
       currentDrive=$template${alphabet[$i]}
       ((numOfDrives--))
     done
@@ -172,13 +199,13 @@ show_drives() {
 
 # Function to handle confirmation to zap drives
 handle_confirmation() {
-    echo "Force is: $force"
+    #echo "Force is: $force"  #DEBUG
     if [ "$force" = false ]; then
       show_drives
       read -p "Do you want to continue? y/n " confirmation
-      echo "You responded: $confirmation"
+      #echo "You responded: $confirmation"  #DEBUG
       if [[ $confirmation != y ]]; then
-        echo "Exiting..."
+        echo "User abort.  Exiting..."
         exit 0
       fi
     fi
@@ -190,23 +217,24 @@ zap_drives() {
     echo "Zapping drives!"
 
     for drive in "${drives[@]}"; do
-      echo "sgdisk -Z $drive"
-      #sgdisk -Z $drive
+      echo "sgdisk -Z $drive"  #DEBUG
+      sgdisk -Z $drive
       returnCode=$?
-      #returnCode=1
-      echo "Exit code: $returnCode"
+      #returnCode=1  #DEBUG
+      #echo "Exit code: $returnCode"  #DEBUG
       if [ $returnCode -gt 0 ]; then
-        echo "sgdisk failed"
+        echo
+        echo "ssdz: sgdisk failed" >&2
         exit 1
       fi
     done
-    echo "All drives zapped"
+    echo "All drives zapped!"
 }
 
 # Main
 handle_args "$@"
 is_installed
-show_title
 check_req_args
 create_drives
+show_title
 handle_confirmation
