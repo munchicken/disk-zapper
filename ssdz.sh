@@ -80,7 +80,7 @@ handle_args() {
         ;;
       -d | --drive)
         # test if in format /dev/sdx
-        #   currently only supporting /dev/sdx, will try to accomodate /dev/sdxx in next ver
+        #   currently only supporting /dev/sdx, will try to accommodate /dev/sdxx in next ver
         if [[ $2 =~ /dev/sd[a-z]{1}$ ]]; then
           startingDrive="$2"
           #echo "Starting drive: $startingDrive"  #DEBUG
@@ -177,7 +177,7 @@ create_drives() {
 
       # check if we went past /sdaz
       #   currently program adds another 'a' instead of restarting with b (/sdaaa not /sdba)
-      #   will try to accomodate another set of 26 drives in next version
+      #   will try to accommodate another set of 26 drives in next version
       if [ $currentDrive = /dev/sdaaa ]; then
         #echo "Exceeded limitation at: $currentDrive"  #DEBUG
         echo "Error:  Exceeded limitation, exiting.  (past /dev/sdaz)" >&2
